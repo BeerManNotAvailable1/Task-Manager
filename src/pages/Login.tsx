@@ -1,63 +1,60 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login, register } from '../api/authApi';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = isLogin ? '/api/auth/login' : '/api/auth/register';
-    
+    setError('');
     try {
-      const response = await fetch(`http://localhost:5000${url}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/');
-      } else {
-        alert('Ошибка авторизации');
-      }
-    } catch (err) {
-      console.error(err);
+      const data = isLogin
+        ? await login({ email, password })
+        : await register({ email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка авторизации');
     }
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '50px auto', padding: 20 }}>
+    <div className="panel" style={{ maxWidth: 400, margin: '50px auto' }}>
       <h2>{isLogin ? 'Вход' : 'Регистрация'}</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', marginBottom: 10, padding: 8 }}
-        />
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: '100%', marginBottom: 10, padding: 8 }}
-        />
-        <button type="submit" style={{ width: '100%', padding: 10 }}>
+      {error && <p style={{ color: '#dc2626', marginBottom: 10 }}>{error}</p>}
+      <form onSubmit={handleSubmit} className="task-form">
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <button type="submit" className="nav-btn active">
           {isLogin ? 'Войти' : 'Зарегистрироваться'}
         </button>
       </form>
       <button 
         onClick={() => setIsLogin(!isLogin)}
-        style={{ marginTop: 10, background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+        className="nav-btn"
+        style={{ marginTop: 10, width: '100%' }}
       >
         {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Есть аккаунт? Войти'}
       </button>

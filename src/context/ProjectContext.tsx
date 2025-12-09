@@ -21,7 +21,21 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    getProjects().then(setProjects).catch(console.error);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    const loadProjects = async () => {
+      try {
+        const data = await getProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      }
+    };
+
+    loadProjects();
   }, []);
 
   const addProject = useCallback(

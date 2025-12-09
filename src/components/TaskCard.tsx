@@ -33,11 +33,27 @@ const TaskCard = ({ task, onEdit, onDelete }: TaskCardProps) => {
     <>
       <article className="card task">
         <div className="card-top">
-          <p className="eyebrow">{task.assignee || 'Не назначено'}</p>
+          <p className="eyebrow">{task.assigneeName || task.assignee || 'Не назначено'}</p>
           <span className={`status ${task.status}`}>{task.status}</span>
         </div>
         <h4 className="task-title">{task.title}</h4>
         <p className="task-text">{task.description}</p>
+        {task.attachments && task.attachments.length > 0 && (
+          <div className="attachments" style={{ marginTop: 8 }}>
+            {task.attachments.map((url, idx) => (
+              <a
+                key={idx}
+                href={url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pill"
+                style={{ display: 'inline-block', marginRight: 6, marginBottom: 4 }}
+              >
+                📎 Файл {idx + 1}
+              </a>
+            ))}
+          </div>
+        )}
         <div className="meta">
           <button className="nav-btn" onClick={openEdit}>
             Редактировать

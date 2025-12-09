@@ -29,7 +29,21 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    getTasks().then(setTasks).catch(console.error);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    const loadTasks = async () => {
+      try {
+        const data = await getTasks();
+        setTasks(data);
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+      }
+    };
+
+    loadTasks();
   }, []);
 
   const addTask = useCallback(

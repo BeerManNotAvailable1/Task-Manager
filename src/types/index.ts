@@ -1,5 +1,14 @@
 export type TaskStatus = 'todo' | 'progress' | 'done';
 
+export interface User {
+  id: string;
+  email: string;
+  role: string;
+  name?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -15,6 +24,8 @@ export interface Task {
   status: TaskStatus;
   projectId: string;
   assignee?: string;
+  assigneeName?: string;
   dueDate?: string;
+  attachments?: string[];
 }
 

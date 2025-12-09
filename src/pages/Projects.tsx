@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import { useProjects } from '../context/ProjectContext';
 import { useTasks } from '../context/TaskContext';
+import { getProjectId } from '../utils/projectIdHelper';
 
 const Projects = () => {
   const { projects } = useProjects();
@@ -21,7 +22,7 @@ const Projects = () => {
       </div>
       <div className="grid">
         {projects.map((project) => {
-          const related = tasks.filter((t) => t.projectId === project.id);
+          const related = tasks.filter((t) => getProjectId(t) === project.id);
           return (
             <ProjectCard
               key={project.id}

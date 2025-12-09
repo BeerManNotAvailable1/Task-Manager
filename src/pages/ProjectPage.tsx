@@ -4,6 +4,8 @@ import TaskCard from '../components/TaskCard';
 import { TaskStatus } from '../types';
 import { useTasks } from '../context/TaskContext';
 import { useProjects } from '../context/ProjectContext';
+import { uploadFile } from '../api/uploadApi';
+import { getProjectId } from '../utils/projectIdHelper';
 
 interface ProjectPageProps {
   statusLabels: Record<TaskStatus, string>;
@@ -18,11 +20,13 @@ const ProjectPage = ({ statusLabels }: ProjectPageProps) => {
   const { projects } = useProjects();
   const { tasks, addTask, moveTask, updateTask, deleteTask } = useTasks();
   const project = projects.find((p) => p.id === id);
-  const projectTasks = tasks.filter((t) => t.projectId === id);
+  const projectTasks = tasks.filter((t) => getProjectId(t) === id);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignee, setAssignee] = useState(assigneeOptions[0]);
   const [status, setStatus] = useState<TaskStatus>('todo');
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const kanban = useMemo(
     () =>
@@ -37,11 +41,35 @@ const ProjectPage = ({ statusLabels }: ProjectPageProps) => {
     e.preventDefault();
     if (!title.trim()) return;
     if (!project) return;
-    await addTask({ title, description, assignee, status, projectId: project.id });
+
+    let attachments: string[] = [];
+    if (file) {
+      setUploading(true);
+      try {
+        const result = await uploadFile(file);
+        attachments = [result.url];
+      } catch (err) {
+        console.error('Upload failed:', err);
+        alert('Ошибка загрузки файла');
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
+    await addTask({
+      title,
+      description,
+      assigneeName: assignee,
+      status,
+      projectId: project.id,
+      attachments
+    });
     setTitle('');
     setDescription('');
     setAssignee(assigneeOptions[0]);
     setStatus('todo');
+    setFile(null);
   };
 
   if (!project) {
@@ -141,9 +169,18 @@ const ProjectPage = ({ statusLabels }: ProjectPageProps) => {
               ))}
             </select>
           </label>
+          <label>
+            <span>Файл</span>
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              disabled={uploading}
+            />
+            {file && <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>{file.name}</p>}
+          </label>
         </div>
-        <button type="submit" className="nav-btn active">
-          Создать задачу
+        <button type="submit" className="nav-btn active" disabled={uploading}>
+          {uploading ? 'Загрузка...' : 'Создать задачу'}
         </button>
       </form>
     </section>

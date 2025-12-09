@@ -1,36 +1,40 @@
 import mongoose from 'mongoose';
 
-const projectSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true,
-    trim: true
+const projectSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ]
   },
-  description: { 
-    type: String,
-    trim: true
-  },
-  members: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
-  }],
-  coverImage: { 
-    type: String 
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      }
+    }
   }
-}, { 
-  timestamps: true 
-});
+);
 
-projectSchema.virtual('id').get(function() {
-  return this._id.toString();
-});
+const Project = mongoose.model('Project', projectSchema);
+export default Project;
 
-projectSchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: (doc, ret) => {
-    delete ret._id;
-  }
-});
-
-export default mongoose.model('Project', projectSchema);

@@ -1,42 +1,42 @@
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true,
-    lowercase: true,
-    trim: true
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+    passwordHash: {
+      type: String,
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'member'],
+      default: 'member'
+    },
+    name: {
+      type: String,
+      trim: true
+    }
   },
-  passwordHash: { 
-    type: String, 
-    required: true 
-  },
-  role: { 
-    type: String, 
-    enum: ['admin', 'member'], 
-    default: 'member' 
-  },
-  avatarUrl: { 
-    type: String 
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        delete ret.passwordHash;
+        return ret;
+      }
+    }
   }
-}, { 
-  timestamps: true 
-});
+);
 
-// Виртуальное поле id вместо _id
-userSchema.virtual('id').get(function() {
-  return this._id.toString();
-});
+const User = mongoose.model('User', userSchema);
+export default User;
 
-// Преобразование для JSON
-userSchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: (doc, ret) => {
-    delete ret._id;
-    delete ret.passwordHash;
-  }
-});
-
-export default mongoose.model('User', userSchema);
