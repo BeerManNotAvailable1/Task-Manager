@@ -1,5 +1,13 @@
 version: "3.9"
 services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+
   backend:
     build: ./backend
     ports:
@@ -10,6 +18,8 @@ services:
       - ./backend:/app
       - /app/node_modules
     command: npm run dev
+    depends_on:
+      - mongodb
 
   web:
     build: .
@@ -24,3 +34,5 @@ services:
     depends_on:
       - backend
 
+volumes:
+  mongodb_data:
