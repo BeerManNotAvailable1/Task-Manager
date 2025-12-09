@@ -1,31 +1,24 @@
-type NavItem = {
-  key: 'home' | 'projects' | 'profile';
-  label: string;
-};
+import { NavLink } from 'react-router-dom';
 
-const items: NavItem[] = [
-  { key: 'home', label: 'Главная' },
-  { key: 'projects', label: 'Проекты' },
-  { key: 'profile', label: 'Профиль' }
+const items = [
+  { to: '/', label: 'Главная' },
+  { to: '/projects', label: 'Проекты' },
+  { to: '/profile', label: 'Профиль' }
 ];
 
-interface NavigationProps {
-  current: NavItem['key'];
-  onNavigate: (key: NavItem['key']) => void;
-}
-
-const Navigation = ({ current, onNavigate }: NavigationProps) => (
+const Navigation = () => (
   <nav className="nav">
     <div className="nav-brand">Task Manager</div>
     <div className="nav-list">
       {items.map((item) => (
-        <button
-          key={item.key}
-          className={`nav-btn ${current === item.key ? 'active' : ''}`}
-          onClick={() => onNavigate(item.key)}
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+          end={item.to === '/'}
         >
           {item.label}
-        </button>
+        </NavLink>
       ))}
     </div>
   </nav>

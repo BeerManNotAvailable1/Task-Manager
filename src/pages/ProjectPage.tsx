@@ -1,27 +1,24 @@
 import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import TaskCard from '../components/TaskCard';
-import { Task, TaskStatus, Project } from '../types';
+import { TaskStatus } from '../types';
+import { useTasks } from '../context/TaskContext';
+import { useProjects } from '../context/ProjectContext';
 
 interface ProjectPageProps {
-  project: Project;
-  tasks: Task[];
   statusLabels: Record<TaskStatus, string>;
-  onBack: () => void;
-  onCreate: (task: Omit<Task, 'id' | 'projectId'>) => void;
-  onMove: (taskId: string, direction: 'left' | 'right') => void;
 }
 
 const statusOptions: TaskStatus[] = ['todo', 'progress', 'done'];
 const assigneeOptions = ['Анна', 'Ирина', 'Сергей', 'Даниил', 'Виктор', 'Марина', 'Юлия'];
 
-const ProjectPage = ({
-  project,
-  tasks,
-  statusLabels,
-  onBack,
-  onCreate,
-  onMove
-}: ProjectPageProps) => {
+const ProjectPage = ({ statusLabels }: ProjectPageProps) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { projects } = useProjects();
+  const { tasks, addTask, moveTask, updateTask, deleteTask } = useTasks();
+  const project = projects.find((p) => p.id === id);
+  const projectTasks = tasks.filter((t) => t.projectId === id);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignee, setAssignee] = useState(assigneeOptions[0]);
@@ -31,20 +28,33 @@ const ProjectPage = ({
     () =>
       statusOptions.map((key) => ({
         status: key,
-        items: tasks.filter((t) => t.status === key)
+        items: projectTasks.filter((t) => t.status === key)
       })),
-    [tasks]
+    [projectTasks]
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onCreate({ title, description, assignee, status });
+    if (!project) return;
+    await addTask({ title, description, assignee, status, projectId: project.id });
     setTitle('');
     setDescription('');
     setAssignee(assigneeOptions[0]);
     setStatus('todo');
   };
+
+  if (!project) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">Проект</p>
+        <h1>Проект не найден</h1>
+        <button className="nav-btn" onClick={() => navigate('/projects')}>
+          К списку проектов
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="panel">
@@ -53,7 +63,7 @@ const ProjectPage = ({
           <p className="eyebrow">Проект</p>
           <h1>{project.name}</h1>
         </div>
-        <button className="nav-btn" onClick={onBack}>
+        <button className="nav-btn" onClick={() => navigate('/projects')}>
           Назад к списку проектов
         </button>
       </div>
@@ -69,19 +79,25 @@ const ProjectPage = ({
               <div className="stack">
                 {column.items.map((task) => (
                   <div key={task.id} className="task-row">
-                    <TaskCard task={task} />
+                    <TaskCard
+                      task={task}
+                      onEdit={(data) => updateTask(task.id, data)}
+                      onDelete={async () => {
+                        if (confirm('Удалить задачу?')) await deleteTask(task.id);
+                      }}
+                    />
                     <div className="move-controls">
                       <button
                         type="button"
                         className="nav-btn"
-                        onClick={() => onMove(task.id, 'left')}
+                        onClick={() => moveTask(task.id, 'left')}
                       >
                         {'<'}
                       </button>
                       <button
                         type="button"
                         className="nav-btn"
-                        onClick={() => onMove(task.id, 'right')}
+                        onClick={() => moveTask(task.id, 'right')}
                       >
                         {'>'}
                       </button>

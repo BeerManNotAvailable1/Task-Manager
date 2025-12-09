@@ -1,5 +1,16 @@
 version: "3.9"
 services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
   web:
     build: .
     ports:
@@ -8,4 +19,8 @@ services:
       - .:/app
       - /app/node_modules
     command: npm run dev -- --host --port 5173
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
 

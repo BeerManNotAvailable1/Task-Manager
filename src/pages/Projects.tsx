@@ -1,33 +1,40 @@
+import { Link, useNavigate } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
-import { Project, Task } from '../types';
+import { useProjects } from '../context/ProjectContext';
+import { useTasks } from '../context/TaskContext';
 
-interface ProjectsProps {
-  projects: Project[];
-  tasks: Task[];
-  onOpen: (projectId: string) => void;
-}
+const Projects = () => {
+  const { projects } = useProjects();
+  const { tasks } = useTasks();
+  const navigate = useNavigate();
 
-const Projects = ({ projects, tasks, onOpen }: ProjectsProps) => (
-  <section className="panel">
-    <div>
-      <p className="eyebrow">Проекты</p>
-      <h1>Список проектов</h1>
-    </div>
-    <div className="grid">
-      {projects.map((project) => {
-        const related = tasks.filter((t) => t.projectId === project.id);
-        return (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            tasksTotal={related.length}
-            onOpen={() => onOpen(project.id)}
-          />
-        );
-      })}
-    </div>
-  </section>
-);
+  return (
+    <section className="panel">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Проекты</p>
+          <h1>Список проектов</h1>
+        </div>
+        <Link to="/projects/new" className="nav-btn active">
+          Новый проект
+        </Link>
+      </div>
+      <div className="grid">
+        {projects.map((project) => {
+          const related = tasks.filter((t) => t.projectId === project.id);
+          return (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              tasksTotal={related.length}
+              onOpen={() => navigate(`/projects/${project.id}`)}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
 export default Projects;
 

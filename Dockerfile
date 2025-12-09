@@ -3,6 +3,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm install --frozen-lockfile || npm install
+RUN npm install --save-dev @types/node @types/react @types/react-dom
 
 COPY . .
 
