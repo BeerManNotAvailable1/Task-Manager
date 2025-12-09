@@ -4,10 +4,10 @@ import { Project, Task } from '../types';
 interface ProjectsProps {
   projects: Project[];
   tasks: Task[];
-  projectLookup: Record<string, string>;
+  onOpen: (projectId: string) => void;
 }
 
-const Projects = ({ projects, tasks }: ProjectsProps) => (
+const Projects = ({ projects, tasks, onOpen }: ProjectsProps) => (
   <section className="panel">
     <div>
       <p className="eyebrow">Проекты</p>
@@ -16,13 +16,12 @@ const Projects = ({ projects, tasks }: ProjectsProps) => (
     <div className="grid">
       {projects.map((project) => {
         const related = tasks.filter((t) => t.projectId === project.id);
-        const done = related.filter((t) => t.status === 'done').length;
         return (
           <ProjectCard
             key={project.id}
             project={project}
             tasksTotal={related.length}
-            tasksDone={done}
+            onOpen={() => onOpen(project.id)}
           />
         );
       })}

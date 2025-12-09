@@ -1,49 +1,30 @@
 import { useMemo, useState } from 'react';
 import Navigation from './components/Navigation';
-import TaskCard from './components/TaskCard';
 import ProjectCard from './components/ProjectCard';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Profile from './pages/Profile';
-import { filterTasks } from './utils/filterTasks';
-import { formatDate } from './utils/dateHelpers';
+import ProjectPage from './pages/ProjectPage';
+import { generateId } from './utils/generateId';
 import { Project, Task, TaskStatus } from './types';
 import './App.css';
 
-type Page = 'home' | 'projects' | 'profile';
+type Page = 'home' | 'projects' | 'project' | 'profile';
 
-const projects: Project[] = [
-  {
-    id: 'p1',
-    name: 'Web App',
-    description: 'Клиентский портал для управления задачами',
-    owner: 'Ирина',
-    createdAt: '2024-10-02'
-  },
-  {
-    id: 'p2',
-    name: 'Mobile App',
-    description: 'Приложение для команды продаж',
-    owner: 'Даниил',
-    createdAt: '2024-11-12'
-  },
-  {
-    id: 'p3',
-    name: 'Backend',
-    description: 'Сервис API и интеграции',
-    owner: 'Сергей',
-    createdAt: '2024-08-21'
-  }
+const initialProjects: Project[] = [
+  { id: 'p1', name: 'Web App', description: 'Клиентский портал' },
+  { id: 'p2', name: 'Mobile App', description: 'Приложение для продаж' },
+  { id: 'p3', name: 'Backend', description: 'Сервис API и интеграции' }
 ];
 
-const tasks: Task[] = [
+const initialTasks: Task[] = [
   {
     id: 't1',
     title: 'Дизайн дашборда',
     description: 'Собрать макеты для главной страницы',
     status: 'todo',
     projectId: 'p1',
-    dueDate: '2025-01-15'
+    assignee: 'Ирина'
   },
   {
     id: 't2',
@@ -51,7 +32,7 @@ const tasks: Task[] = [
     description: 'Подключить JWT и refresh токены',
     status: 'progress',
     projectId: 'p3',
-    dueDate: '2024-12-22'
+    assignee: 'Сергей'
   },
   {
     id: 't3',
@@ -59,7 +40,7 @@ const tasks: Task[] = [
     description: 'Настроить сборку и деплой',
     status: 'progress',
     projectId: 'p3',
-    dueDate: '2025-01-05'
+    assignee: 'Сергей'
   },
   {
     id: 't4',
@@ -67,7 +48,7 @@ const tasks: Task[] = [
     description: 'Сценарии рассылок и подсказок',
     status: 'todo',
     projectId: 'p1',
-    dueDate: '2025-01-03'
+    assignee: 'Анна'
   },
   {
     id: 't5',
@@ -75,7 +56,7 @@ const tasks: Task[] = [
     description: 'Собрать метрики в Amplitude',
     status: 'done',
     projectId: 'p1',
-    dueDate: '2024-11-30'
+    assignee: 'Даниил'
   },
   {
     id: 't6',
@@ -83,7 +64,7 @@ const tasks: Task[] = [
     description: 'Подключить WebSocket сервер',
     status: 'todo',
     projectId: 'p2',
-    dueDate: '2025-01-18'
+    assignee: 'Виктор'
   },
   {
     id: 't7',
@@ -91,7 +72,7 @@ const tasks: Task[] = [
     description: 'Индексы и план запросов',
     status: 'done',
     projectId: 'p3',
-    dueDate: '2024-12-01'
+    assignee: 'Марина'
   },
   {
     id: 't8',
@@ -99,7 +80,15 @@ const tasks: Task[] = [
     description: 'Интервью с 5 пользователями',
     status: 'progress',
     projectId: 'p2',
-    dueDate: '2025-01-10'
+    assignee: 'Юлия'
+  },
+  {
+    id: 't9',
+    title: 'Мобильный онбординг',
+    description: 'Экран приветствия и советы',
+    status: 'progress',
+    projectId: 'p2',
+    assignee: 'Анна'
   }
 ];
 
@@ -111,20 +100,41 @@ const statusLabels: Record<TaskStatus, string> = {
 
 function App() {
   const [page, setPage] = useState<Page>('home');
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
   const projectLookup = useMemo(
     () => Object.fromEntries(projects.map((p) => [p.id, p.name])),
-    []
+    [projects]
   );
 
-  const kanban = useMemo(
-    () =>
-      (Object.keys(statusLabels) as TaskStatus[]).map((status) => ({
-        status,
-        items: filterTasks(tasks, status)
-      })),
-    []
+  const currentProject = useMemo(
+    () => projects.find((p) => p.id === currentProjectId) || null,
+    [projects, currentProjectId]
   );
+
+  const handleOpenProject = (projectId: string) => {
+    setCurrentProjectId(projectId);
+    setPage('project');
+  };
+
+  const handleCreateTask = (projectId: string, task: Omit<Task, 'id'>) => {
+    setTasks((prev) => [...prev, { ...task, id: generateId(), projectId }]);
+  };
+
+  const handleMoveTask = (taskId: string, direction: 'left' | 'right') => {
+    const order: TaskStatus[] = ['todo', 'progress', 'done'];
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== taskId) return task;
+        const idx = order.indexOf(task.status);
+        const nextIdx = direction === 'left' ? idx - 1 : idx + 1;
+        if (nextIdx < 0 || nextIdx >= order.length) return task;
+        return { ...task, status: order[nextIdx] };
+      })
+    );
+  };
 
   return (
     <div className="app">
@@ -132,42 +142,19 @@ function App() {
       <main className="content">
         {page === 'home' && <Home projects={projects} tasks={tasks} />}
         {page === 'projects' && (
-          <Projects
-            projects={projects}
-            tasks={tasks}
-            projectLookup={projectLookup}
+          <Projects projects={projects} tasks={tasks} onOpen={handleOpenProject} />
+        )}
+        {page === 'project' && currentProject && (
+          <ProjectPage
+            project={currentProject}
+            tasks={tasks.filter((t) => t.projectId === currentProject.id)}
+            statusLabels={statusLabels}
+            onBack={() => setPage('projects')}
+            onCreate={(task) => handleCreateTask(currentProject.id, task)}
+            onMove={handleMoveTask}
           />
         )}
         {page === 'profile' && <Profile />}
-
-        <section className="kanban">
-          <header className="section-header">
-            <div>
-              <p className="eyebrow">Kanban</p>
-              <h2>Задачи</h2>
-            </div>
-          </header>
-          <div className="columns">
-            {kanban.map((column) => (
-              <div key={column.status} className="column">
-                <div className="column-head">
-                  <span className="tag">{statusLabels[column.status]}</span>
-                  <span className="count">{column.items.length}</span>
-                </div>
-                <div className="stack">
-                  {column.items.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      projectName={projectLookup[task.projectId]}
-                      formattedDue={formatDate(task.dueDate)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
     </div>
   );

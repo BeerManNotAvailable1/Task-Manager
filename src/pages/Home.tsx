@@ -1,5 +1,4 @@
 import { Project, Task } from '../types';
-import { formatDate } from '../utils/dateHelpers';
 
 interface HomeProps {
   projects: Project[];
@@ -8,10 +7,7 @@ interface HomeProps {
 
 const Home = ({ projects, tasks }: HomeProps) => {
   const done = tasks.filter((t) => t.status === 'done').length;
-  const progress = tasks.filter((t) => t.status === 'progress').length;
-  const nextDue = [...tasks].sort(
-    (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-  )[0];
+  const total = tasks.length;
 
   return (
     <section className="panel">
@@ -25,16 +21,12 @@ const Home = ({ projects, tasks }: HomeProps) => {
           <strong>{projects.length}</strong>
         </div>
         <div className="stat-card">
-          <p className="muted">В работе</p>
-          <strong>{progress}</strong>
+          <p className="muted">Всего задач</p>
+          <strong>{total}</strong>
         </div>
         <div className="stat-card">
           <p className="muted">Завершено</p>
           <strong>{done}</strong>
-        </div>
-        <div className="stat-card">
-          <p className="muted">Ближайший дедлайн</p>
-          <strong>{nextDue ? formatDate(nextDue.dueDate) : '—'}</strong>
         </div>
       </div>
     </section>
